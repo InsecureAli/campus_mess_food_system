@@ -1,7 +1,7 @@
 import React from 'react'
 import { motion } from 'framer-motion'
 
-const ManageMenu = () => {
+const AdminOrders = () => {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -10,7 +10,7 @@ const ManageMenu = () => {
     >
       <div>
         <h1 className="text-2xl lg:text-3xl font-bold text-white">
-          Manage Menu
+          Admin Orders
         </h1>
         <p className="text-slate-400 mt-1 text-sm">
           Add and manage your daily menu items
@@ -31,4 +31,4 @@ const ManageMenu = () => {
   )
 }
 
-export default ManageMenu
+export default AdminOrders
