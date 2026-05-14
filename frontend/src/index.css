@@ -2,19 +2,24 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
 
 /* Tailwind CSS directives - these inject Tailwind's styles */
-@tailwind base;        /* Reset/normalize styles */
-@tailwind components;  /* Component class styles */
-@tailwind utilities;   /* Utility class styles */
+@import "tailwindcss";
+@config "../tailwind.config.js";
+
+
+
+   /* Utility class styles */
 
 /* =============================================
    GLOBAL BASE STYLES
    ============================================= */
 
-/* Apply to everything */
-*, *::before, *::after {
-  box-sizing: border-box; /* Better box model */
-  margin: 0;
-  padding: 0;
+/* Must live inside @layer base so Tailwind @layer utilities (pt-*, py-*, etc.) can override. */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 }
 
 /* Root HTML element */
@@ -109,6 +114,6 @@ body {
 /* Input focus ring */
 input:focus, textarea:focus, select:focus {
   outline: none;
-  ring: 2px solid #6366F1;
+  box-shadow: 0 0 0 2px #6366f1;
 }
 

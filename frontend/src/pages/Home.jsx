@@ -2,7 +2,7 @@
 // pages/Home.jsx - Landing Page
 // =============================================
 
-import React from 'react'
+import React, { useLayoutEffect, useRef } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import {
@@ -65,6 +65,67 @@ const Home = () => {
   const { isAuthenticated, isStudent, isVendor, isAdmin } = useAuth()
   const navigate = useNavigate()
 
+  const navRef = useRef(null)
+  const heroRef = useRef(null)
+  const statsRef = useRef(null)
+  const featuresRef = useRef(null)
+  const rolesRef = useRef(null)
+
+  // #region agent log
+  useLayoutEffect(() => {
+    const nav = navRef.current
+    const hero = heroRef.current
+    const stats = statsRef.current
+    const features = featuresRef.current
+    const roles = rolesRef.current
+    if (!hero) return
+
+    const post = (hypothesisId, message, data) => {
+      fetch('http://127.0.0.1:7695/ingest/6036efff-302b-4136-96a5-bdaf39a984dd', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Debug-Session-Id': '0f63bc' },
+        body: JSON.stringify({
+          sessionId: '0f63bc',
+          hypothesisId,
+          location: 'Home.jsx:useLayoutEffect',
+          message,
+          data,
+          timestamp: Date.now(),
+          runId: 'post-cascade-fix',
+        }),
+      }).catch(() => {})
+    }
+
+    const heroCs = getComputedStyle(hero)
+    const navH = nav ? nav.getBoundingClientRect().height : null
+    const sRect = stats?.getBoundingClientRect()
+    const fRect = features?.getBoundingClientRect()
+    const rRect = roles?.getBoundingClientRect()
+
+    post('H1', 'tailwind section padding', {
+      heroPaddingTop: heroCs.paddingTop,
+      heroPaddingBottom: heroCs.paddingBottom,
+      statsPaddingTop: stats ? getComputedStyle(stats).paddingTop : null,
+      statsPaddingBottom: stats ? getComputedStyle(stats).paddingBottom : null,
+      featuresPaddingTop: features ? getComputedStyle(features).paddingTop : null,
+      rolesPaddingTop: roles ? getComputedStyle(roles).paddingTop : null,
+    })
+    post('H2', 'hero overflow', {
+      overflow: heroCs.overflow,
+      overflowX: heroCs.overflowX,
+      overflowY: heroCs.overflowY,
+    })
+    post('H3', 'fixed nav vs hero top padding', {
+      navHeight: navH,
+      heroPaddingTopPx: parseFloat(heroCs.paddingTop) || 0,
+    })
+    post('H4', 'adjacent section bounds gap px', {
+      statsBottomToFeaturesTop: sRect && fRect ? Math.round(fRect.top - sRect.bottom) : null,
+      featuresBottomToRolesTop: fRect && rRect ? Math.round(rRect.top - fRect.bottom) : null,
+    })
+  }, [])
+  // #endregion
+
   // If already logged in, redirect to dashboard
   const handleGetStarted = () => {
     if (isAuthenticated) {
@@ -82,7 +143,7 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           NAVBAR
           ══════════════════════════════════════════ */}
-      <nav className="fixed top-0 left-0 right-0 z-50
+      <nav ref={navRef} className="fixed top-0 left-0 right-0 z-50
                       bg-slate-900/80 backdrop-blur-md
                       border-b border-slate-700/50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -133,7 +194,7 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           HERO SECTION
           ══════════════════════════════════════════ */}
-      <section className="pt-32 pb-20 px-4 relative overflow-hidden">
+      <section ref={heroRef} className="pt-36 sm:pt-40 pb-24 px-4 relative overflow-x-hidden">
         {/* Background gradient blobs */}
         <div className="absolute top-20 left-1/4 w-96 h-96
                         bg-indigo-600/20 rounded-full blur-3xl
@@ -163,7 +224,7 @@ const Home = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-5xl sm:text-6xl lg:text-7xl font-extrabold
-                       leading-tight mb-6"
+                       leading-snug mb-8"
           >
             Your Campus{' '}
             <span className="bg-gradient-to-r from-indigo-400 to-purple-400
@@ -223,7 +284,7 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           STATS SECTION
           ══════════════════════════════════════════ */}
-      <section className="py-16 px-4 border-y border-slate-700/50
+      <section ref={statsRef} className="py-16 pb-20 px-4 border-y border-slate-700/50
                           bg-slate-800/30">
         <div className="max-w-5xl mx-auto">
           <motion.div
@@ -252,14 +313,14 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           FEATURES SECTION
           ══════════════════════════════════════════ */}
-      <section className="py-24 px-4">
+      <section ref={featuresRef} className="pt-28 pb-32 px-4">
         <div className="max-w-6xl mx-auto">
           {/* Section Header */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-16 mt-2"
           >
             <h2 className="text-4xl font-bold text-white mb-4">
               Everything You Need
@@ -316,13 +377,13 @@ const Home = () => {
       {/* ══════════════════════════════════════════
           ROLES SECTION
           ══════════════════════════════════════════ */}
-      <section className="py-24 px-4 bg-slate-800/30">
+      <section ref={rolesRef} className="pt-28 pb-24 px-4 bg-slate-800/30">
         <div className="max-w-5xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-center mb-16"
+            className="text-center mb-16 mt-2"
           >
             <h2 className="text-4xl font-bold text-white mb-4">
               Built for Everyone
