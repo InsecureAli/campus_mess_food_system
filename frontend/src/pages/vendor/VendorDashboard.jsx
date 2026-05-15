@@ -85,27 +85,149 @@ const VendorDashboard = () => {
   }
 
   // Show approval pending message
-  if (!user?.isApproved) {
-    return (
-      <div className="flex flex-col items-center justify-center
-                      min-h-[60vh] text-center space-y-4">
-        <div className="text-7xl">⏳</div>
-        <h2 className="text-2xl font-bold text-white">
-          Account Pending Approval
-        </h2>
-        <p className="text-slate-400 max-w-md">
-          Your vendor account is awaiting admin approval.
-          You'll be notified once approved. Please check back later.
+  // Show approval pending message
+if (!user?.isApproved) {
+  return (
+    <div className="space-y-6">
+
+      {/* Page Header */}
+      <div>
+        <h1 className="text-2xl lg:text-3xl font-bold text-white">
+          Vendor Dashboard
+        </h1>
+        <p className="text-slate-400 mt-1 text-sm">
+          Welcome, {user?.vendorName}
         </p>
-        <div className="bg-amber-500/10 border border-amber-500/30
-                        rounded-2xl px-8 py-4">
-          <p className="text-amber-400 text-sm">
-            📧 {user?.email}
+      </div>
+
+      {/* Pending Approval Card */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="bg-gradient-to-br from-amber-500/10 to-orange-500/5
+                   border border-amber-500/30 rounded-3xl p-10
+                   text-center"
+      >
+        {/* Animated clock icon */}
+        <motion.div
+          animate={{ rotate: [0, 10, -10, 0] }}
+          transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+          className="text-8xl mb-6 inline-block"
+        >
+          ⏳
+        </motion.div>
+
+        <h2 className="text-3xl font-bold text-white mb-3">
+          Pending Admin Approval
+        </h2>
+        <p className="text-slate-400 max-w-lg mx-auto mb-8 leading-relaxed">
+          Your vendor account has been registered successfully!
+          An admin will review your account and approve it shortly.
+          You will have full access once approved.
+        </p>
+
+        {/* Vendor info card */}
+        <div className="bg-slate-800/60 border border-slate-700/50
+                        rounded-2xl p-6 max-w-sm mx-auto mb-8">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-12 h-12 bg-amber-500/20 rounded-xl
+                            flex items-center justify-center text-2xl">
+              🏪
+            </div>
+            <div className="text-left">
+              <p className="text-white font-bold">{user?.vendorName}</p>
+              <p className="text-amber-400 text-sm">{user?.messName}</p>
+            </div>
+          </div>
+          <div className="space-y-2 text-sm text-left">
+            <div className="flex justify-between">
+              <span className="text-slate-400">Email</span>
+              <span className="text-white text-xs">{user?.email}</span>
+            </div>
+            {user?.phone && (
+              <div className="flex justify-between">
+                <span className="text-slate-400">Phone</span>
+                <span className="text-white">{user?.phone}</span>
+              </div>
+            )}
+            <div className="flex justify-between">
+              <span className="text-slate-400">Status</span>
+              <span className="text-amber-400 font-semibold">
+                Pending ⏳
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* What's locked / What's available */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4
+                        max-w-lg mx-auto mb-8">
+          {/* Available now */}
+          <div className="bg-emerald-500/10 border border-emerald-500/20
+                          rounded-2xl p-4 text-left">
+            <p className="text-emerald-400 font-semibold text-sm mb-3">
+              ✅ Available Now
+            </p>
+            <ul className="space-y-1.5 text-slate-300 text-xs">
+              <li>• View this dashboard</li>
+              <li>• Update your profile</li>
+              <li>• Edit mess details</li>
+            </ul>
+          </div>
+
+          {/* Locked until approved */}
+          <div className="bg-rose-500/10 border border-rose-500/20
+                          rounded-2xl p-4 text-left">
+            <p className="text-rose-400 font-semibold text-sm mb-3">
+              🔒 Requires Approval
+            </p>
+            <ul className="space-y-1.5 text-slate-400 text-xs">
+              <li>• Add menu items</li>
+              <li>• Manage menu</li>
+              <li>• Receive orders</li>
+              <li>• View analytics</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Contact admin note */}
+        <p className="text-slate-500 text-sm">
+          Need help?{' '}
+          <span className="text-amber-400">
+            Contact admin at admin@campus.edu
+          </span>
+        </p>
+      </motion.div>
+
+      {/* Profile Quick Edit shortcut */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="bg-slate-800/50 border border-slate-700/50
+                   rounded-2xl p-6 flex items-center
+                   justify-between"
+      >
+        <div>
+          <p className="text-white font-semibold">
+            While you wait...
+          </p>
+          <p className="text-slate-400 text-sm mt-0.5">
+            Complete your vendor profile to get approved faster
           </p>
         </div>
-      </div>
-    )
-  }
+        <a
+          href="/vendor/profile"
+          className="flex-shrink-0 bg-amber-500 hover:bg-amber-600
+                     text-white px-5 py-2.5 rounded-xl text-sm
+                     font-semibold transition-colors"
+        >
+          Complete Profile →
+        </a>
+      </motion.div>
+    </div>
+  )
+}
 
   return (
     <div className="space-y-8">

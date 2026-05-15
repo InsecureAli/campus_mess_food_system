@@ -2,12 +2,15 @@
 // controllers/adminController.js
 // =============================================
 
-import asyncHandler from 'express-async-handler';
-import User from '../models/User.js';
-import Vendor from '../models/Vendor.js';
-import MenuItem from '../models/MenuItem.js';
-import Order from '../models/Order.js';
+// =============================================
+// controllers/adminController.js - FIXED
+// =============================================
 
+import asyncHandler from 'express-async-handler';
+import User     from '../models/User.js';
+import Vendor   from '../models/Vendor.js';
+import MenuItem from '../models/MenuItem.js';  // ✅ ADD THIS
+import Order    from '../models/Order.js';      // ✅ ADD THIS
 // ─────────────────────────────────────────────
 // @desc    Get dashboard stats
 // @route   GET /api/admin/stats
@@ -226,6 +229,11 @@ export const getAllVendors = asyncHandler(async (req, res) => {
 // @route   PUT /api/admin/vendors/:id/approve
 // @access  Private (Admin)
 // ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// @desc    Approve or revoke vendor approval
+// @route   PUT /api/admin/vendors/:id/approve
+// @access  Private (Admin)
+// ─────────────────────────────────────────────
 export const approveVendor = asyncHandler(async (req, res) => {
   const vendor = await Vendor.findById(req.params.id);
 
@@ -235,18 +243,98 @@ export const approveVendor = asyncHandler(async (req, res) => {
   }
 
   const { isApproved } = req.body;
+
+  // Update vendor approval status
   vendor.isApproved = isApproved;
   await vendor.save();
+
+  // ✅ CASCADE EFFECT: Handle menu items and orders
+  if (!isApproved) {
+    // ── REVOKE: Hide all vendor's menu items ────
+    // When approval is revoked, mark ALL their menu
+    // items as unavailable so they won't appear
+    // even if the filter has any edge case
+
+    await MenuItem.updateMany(
+      { vendor: vendor._id },   // Find all items by this vendor
+      {
+        $set: {
+          isAvailable: false,   // Mark as unavailable
+        },
+      }
+    );
+
+    // ── REVOKE: Cancel all pending/accepted orders ─
+    // Students with pending orders from this vendor
+    // should have their orders cancelled automatically
+
+    const pendingOrders = await Order.find({
+      vendor: vendor._id,
+      status: { $in: ['pending', 'accepted', 'preparing'] },
+    });
+
+    // Update each pending order to cancelled
+    if (pendingOrders.length > 0) {
+      await Order.updateMany(
+        {
+          vendor: vendor._id,
+          status: { $in: ['pending', 'accepted', 'preparing'] },
+        },
+        {
+          $set: {
+            status:             'cancelled',
+            cancelledBy:        'admin',
+            cancellationReason: 'Vendor approval has been revoked by admin',
+          },
+        }
+      );
+
+      // Restore menu item quantities for cancelled orders
+      for (const order of pendingOrders) {
+        for (const item of order.items) {
+          await MenuItem.findByIdAndUpdate(item.menuItem, {
+            $inc: { availableQuantity: item.quantity },
+          });
+        }
+      }
+    }
+
+    console.log(
+      `⚠️  Vendor ${vendor.vendorName} revoked. ` +
+      `Menu items hidden. ${pendingOrders.length} orders cancelled.`
+    );
+
+  } else {
+    // ── APPROVE: Re-enable vendor's menu items ───
+    // When vendor is approved (or re-approved),
+    // restore their menu items to available
+    // Only restore items that were previously available
+
+    await MenuItem.updateMany(
+      { vendor: vendor._id },
+      {
+        $set: {
+          isAvailable: true,
+        },
+      }
+    );
+
+    console.log(
+      `✅ Vendor ${vendor.vendorName} approved. Menu items restored.`
+    );
+  }
 
   res.status(200).json({
     success: true,
     message: isApproved
-      ? 'Vendor approved successfully ✅'
-      : 'Vendor rejected ❌',
+      ? `${vendor.vendorName} has been approved ✅`
+      : `${vendor.vendorName} approval has been revoked ❌`,
     vendor,
+    cascadeInfo: isApproved
+      ? 'Menu items are now visible to students'
+      : 'Menu items hidden and pending orders cancelled',
   });
 });
-
 // ─────────────────────────────────────────────
 // @desc    Get all orders (admin view)
 // @route   GET /api/admin/orders
@@ -276,5 +364,64 @@ export const getAllOrders = asyncHandler(async (req, res) => {
     total,
     pages: Math.ceil(total / limitNum),
     orders,
+  });
+});
+
+// ─────────────────────────────────────────────
+// @desc    Ban or unban a vendor
+// @route   PUT /api/admin/vendors/:id/ban
+// @access  Private (Admin)
+// ─────────────────────────────────────────────
+export const toggleVendorBan = asyncHandler(async (req, res) => {
+  const vendor = await Vendor.findById(req.params.id);
+
+  if (!vendor) {
+    res.status(404);
+    throw new Error('Vendor not found');
+  }
+
+  // Toggle ban status
+  vendor.isBanned = !vendor.isBanned;
+  await vendor.save();
+
+  // ✅ CASCADE: Hide/Show menu items when ban status changes
+  if (vendor.isBanned) {
+    // Vendor is now banned → hide their menu items
+    await MenuItem.updateMany(
+      { vendor: vendor._id },
+      { $set: { isAvailable: false } }
+    );
+
+    // Cancel their pending orders
+    await Order.updateMany(
+      {
+        vendor: vendor._id,
+        status: { $in: ['pending', 'accepted', 'preparing'] },
+      },
+      {
+        $set: {
+          status:             'cancelled',
+          cancelledBy:        'admin',
+          cancellationReason: 'Vendor has been banned',
+        },
+      }
+    );
+  } else {
+    // Vendor is unbanned → restore their menu items
+    // (only if they are also approved)
+    if (vendor.isApproved) {
+      await MenuItem.updateMany(
+        { vendor: vendor._id },
+        { $set: { isAvailable: true } }
+      );
+    }
+  }
+
+  res.status(200).json({
+    success:  true,
+    message:  vendor.isBanned
+      ? `${vendor.vendorName} has been banned 🚫`
+      : `${vendor.vendorName} has been unbanned ✅`,
+    isBanned: vendor.isBanned,
   });
 });

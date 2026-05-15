@@ -1,5 +1,5 @@
 // =============================================
-// routes/adminRoutes.js
+// routes/adminRoutes.js - FIXED VERSION
 // =============================================
 
 import express from 'express';
@@ -10,6 +10,7 @@ import {
   deleteUser,
   getAllVendors,
   approveVendor,
+  toggleVendorBan,   // ✅ NEW import
   getAllOrders,
 } from '../controllers/adminController.js';
 
@@ -17,22 +18,22 @@ import { protect, authorizeRoles } from '../middleware/authMiddleware.js';
 
 const router = express.Router();
 
-// All admin routes require: login + admin role
-// We can apply middleware to ALL routes at once using router.use()
-router.use(protect);                   // Must be logged in
-router.use(authorizeRoles('admin'));   // Must be admin
+// All admin routes require login + admin role
+router.use(protect);
+router.use(authorizeRoles('admin'));
 
-// Dashboard statistics
+// Dashboard
 router.get('/stats', getDashboardStats);
 
 // User management
-router.get('/users', getAllUsers);
-router.put('/users/:id/ban', toggleUserBan);
-router.delete('/users/:id', deleteUser);
+router.get('/users',          getAllUsers);
+router.put('/users/:id/ban',  toggleUserBan);
+router.delete('/users/:id',   deleteUser);
 
 // Vendor management
-router.get('/vendors', getAllVendors);
-router.put('/vendors/:id/approve', approveVendor);
+router.get('/vendors',                getAllVendors);
+router.put('/vendors/:id/approve',    approveVendor);
+router.put('/vendors/:id/ban',        toggleVendorBan);  // ✅ NEW route
 
 // Order management
 router.get('/orders', getAllOrders);

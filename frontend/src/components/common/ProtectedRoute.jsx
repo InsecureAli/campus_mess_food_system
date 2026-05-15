@@ -1,9 +1,7 @@
 // =============================================
-// components/common/ProtectedRoute.jsx
+// components/common/ProtectedRoute.jsx - FIXED
 // =============================================
-// Guards routes that require authentication
-// Redirects unauthenticated users to login
-// Redirects wrong-role users to their dashboard
+// Now also handles unapproved vendor redirection
 
 import React from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
@@ -13,25 +11,53 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   const { isAuthenticated, user, isVendor } = useAuth()
   const location = useLocation()
 
-  // If not logged in → redirect to login
-  // Pass current location so we can redirect back after login
+  // ── Not logged in → redirect to login ────────
   if (!isAuthenticated) {
-    return <Navigate to="/login" state={{ from: location }} replace />
+    return (
+      <Navigate
+        to="/login"
+        state={{ from: location }}
+        replace
+      />
+    )
   }
 
-  // Determine user's actual role
+  // ── Determine actual role ─────────────────────
   const userRole = isVendor ? 'vendor' : user?.role
 
-  // If role doesn't match allowed roles → redirect to correct dashboard
+  // ── Wrong role → redirect to own dashboard ───
   if (allowedRoles && !allowedRoles.includes(userRole)) {
-    // Redirect to appropriate dashboard
-    if (userRole === 'admin') return <Navigate to="/admin/dashboard" replace />
-    if (userRole === 'vendor') return <Navigate to="/vendor/dashboard" replace />
+    if (userRole === 'admin')   return <Navigate to="/admin/dashboard"   replace />
+    if (userRole === 'vendor')  return <Navigate to="/vendor/dashboard"  replace />
     if (userRole === 'student') return <Navigate to="/student/dashboard" replace />
     return <Navigate to="/" replace />
   }
 
-  // User is authenticated and has correct role
+  // ── VENDOR APPROVAL CHECK ─────────────────────
+  // If this is a vendor route and vendor is NOT approved,
+  // only allow access to /vendor/dashboard and /vendor/profile
+  // Block all other vendor routes
+  if (userRole === 'vendor' && !user?.isApproved) {
+    const allowedUnapprovedPaths = [
+      '/vendor/dashboard',
+      '/vendor/profile',
+    ]
+
+    const currentPath = location.pathname
+
+    // Check if current path is allowed for unapproved vendors
+    const isAllowed = allowedUnapprovedPaths.some((p) =>
+      currentPath.startsWith(p)
+    )
+
+    if (!isAllowed) {
+      // Redirect unapproved vendor back to dashboard
+      // Dashboard shows the "pending approval" message
+      return <Navigate to="/vendor/dashboard" replace />
+    }
+  }
+
+  // ── All checks passed → render the page ──────
   return children
 }
 
