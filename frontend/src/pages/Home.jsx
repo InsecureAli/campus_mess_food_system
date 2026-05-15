@@ -152,7 +152,7 @@ const Home = () => {
             <div className="flex items-center gap-2">
               <span className="text-2xl">🍽️</span>
               <span className="font-bold text-lg">
-                Campus <span className="text-indigo-400">Mess</span>
+                NTU <span className="text-indigo-400">Mess Food System </span>
               </span>
             </div>
 
@@ -531,7 +531,7 @@ const Home = () => {
             <span className="font-bold text-white">Campus Mess</span>
           </div>
           <p className="text-slate-500 text-sm">
-            © 2026 Campus Mess Food System. University Web Dev Project.
+            © 2026 - National Textile University - Mess Food System. 
           </p>
         </div>
       </footer>
