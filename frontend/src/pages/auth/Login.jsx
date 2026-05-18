@@ -249,15 +249,7 @@ const Login = () => {
           </p>
 
           {/* Demo Credentials */}
-          <div className="mt-6 p-4 bg-slate-800/50 rounded-xl
-                          border border-slate-700/50">
-            <p className="text-slate-400 text-xs text-center mb-2 font-medium">
-              Demo Credentials
-            </p>
-            <div className="space-y-1 text-xs text-slate-500 text-center">
-              <p>Admin: admin@campus.edu / Admin@123</p>
-            </div>
-          </div>
+          
         </motion.div>
       </div>
 
